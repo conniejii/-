@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考古題索引系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 你可以在這裡寫自定義的 CSS */
+        .search-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <nav class="bg-white shadow-md p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-600">Exam Repository</h1>
+            <div class="space-x-4">
+                <a href="#" class="hover:text-blue-500">首頁</a>
+                <a href="#" class="hover:text-blue-500">上傳題目</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="search-gradient py-12 px-4">
+        <div class="container mx-auto text-center text-white">
+            <h2 class="text-3xl font-bold mb-6">找尋你的考古題</h2>
+            <div class="max-w-2xl mx-auto flex bg-white rounded-lg overflow-hidden shadow-lg">
+                <input type="text" placeholder="輸入科目名稱、教授姓名..." 
+                       class="w-full px-6 py-3 text-gray-700 focus:outline-none">
+                <button class="bg-blue-600 text-white px-8 py-3 hover:bg-blue-700 transition">搜尋</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto my-10 px-4">
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="px-6 py-4">學年度</th>
+                        <th class="px-6 py-4">科目名稱</th>
+                        <th class="px-6 py-4">授課教授</th>
+                        <th class="px-6 py-4">類型</th>
+                        <th class="px-6 py-4 text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm">112-1</td>
+                        <td class="px-6 py-4 font-medium">微積分 (一)</td>
+                        <td class="px-6 py-4">王大明 教授</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">期中考</span></td>
+                        <td class="px-6 py-4 text-center">
+                            <a href="#" class="text-blue-600 hover:underline">下載 PDF</a>
+                        </td>
+                    </tr>
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm">111-2</td>
+                        <td class="px-6 py-4 font-medium">線性代數</td>
+                        <td class="px-6 py-4">李小華 教授</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-red-100 text-red-700 text-xs rounded">期末考</span></td>
+                        <td class="px-6 py-4 text-center">
+                            <a href="#" class="text-blue-600 hover:underline">下載 PDF</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="text-center py-10 text-gray-500 text-sm">
+        © 2024 考古題平台 - 僅供學術交流使用
+    </footer>
+
+</body>
+</html>
