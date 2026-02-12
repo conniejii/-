@@ -128,7 +128,7 @@ function renderTable() {
             <td class="border border-gray-700 px-4 py-2 text-center">${exam.year}</td>
             <td class="border border-gray-700 px-4 py-2">${exam.sub}</td>
             <td class="border border-gray-700 px-4 py-2">${exam.prof}</td>
-            <td class="border border-gray-700 px-4 py-2 text-center">${exam.type || '期中考'}</td> 
+            <td class="border border-gray-700 px-4 py-2 text-center">${exam.typ}</td> 
             <td class="border border-gray-700 px-4 py-2 text-center text-blue-400">
                 <a href="${exam.link}" target="_blank" class="hover:underline">下載</a>
             </td>
