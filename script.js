@@ -125,13 +125,12 @@ function renderTable() {
         const originalIndex = allExams.indexOf(exam);
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="border border-gray-700 px-4 py-2 text-center text-gray-500 text-xs">${originalIndex}</td>
             <td class="border border-gray-700 px-4 py-2 text-center">${exam.year}</td>
             <td class="border border-gray-700 px-4 py-2">${exam.sub}</td>
             <td class="border border-gray-700 px-4 py-2">${exam.prof}</td>
             <td class="border border-gray-700 px-4 py-2 text-center">${exam.type || '期中考'}</td> 
             <td class="border border-gray-700 px-4 py-2 text-center text-blue-400">
-                <a href="${exam.link}" target="_blank" rel="noopener noreferrer" class="hover:underline">下載</a>
+                <a href="${exam.link}" target="_blank" class="hover:underline">下載</a>
             </td>
         `;
         tableBody.appendChild(row);
