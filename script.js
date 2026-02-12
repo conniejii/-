@@ -1,7 +1,7 @@
 // 1. 初始化 Supabase 連線 (請填入你從 Supabase 後台拿到的資料)
 const supabaseUrl = 'https://mgbhyzbklpiiorqnbljp.supabase.co';
 const supabaseKey = 'sb_publishable_IgrbbxcW5lmbI_pwg6KAkA_CZ4PkSGi';
-const supabase_ = supabase.createClient(supabaseUrl, supabaseKey);
+const supabase_ = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // 2. 全域變數 (原本從 LocalStorage 拿，現在改為從雲端同步後填入)
 let allExams = [];
