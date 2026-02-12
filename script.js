@@ -65,8 +65,8 @@ function rebuildMenuData() {
         if (!newData[exam.grade].teachers[exam.sub]) {
             newData[exam.grade].teachers[exam.sub] = [];
         }
-        if (!newData[exam.grade].teachers[exam.sub].includes(exam.prof)) {
-            newData[exam.grade].teachers[exam.sub].push(exam.prof);
+        if (!newData[exam.grade].teachers[exam.sub].includes(exam.pro)) {
+            newData[exam.grade].teachers[exam.sub].push(exam.pro);
         }
     });
     data = newData;
