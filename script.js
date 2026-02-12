@@ -1,7 +1,7 @@
 // 1. 初始化 Supabase 連線 (請填入你從 Supabase 後台拿到的資料)
 const supabaseUrl = 'https://mgbhyzbklpiiorqnbljp.supabase.co';
 const supabaseKey = 'sb_publishable_IgrbbxcW5lmbI_pwg6KAkA_CZ4PkSGi';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const supabase_ = supabase.createClient(supabaseUrl, supabaseKey);
 
 // 2. 全域變數 (原本從 LocalStorage 拿，現在改為從雲端同步後填入)
 let allExams = [];
@@ -26,7 +26,7 @@ const tableBody = document.getElementById('examTableBody');
 async function fetchExams() {
     console.log("正在從雲端同步資料...");
     // 從 Supabase 的 'exams' 表格抓取所有資料
-    const { data: cloudData, error } = await supabase
+    const { data: cloudData, error } = await supabase_
         .from('exams')
         .select('*')
         .order('created_at', { ascending: false }); // 按時間排序，新的在前
@@ -76,7 +76,7 @@ function rebuildMenuData() {
 // --- 【新增功能：存入雲端】 ---
 async function add(grade, sub, prof, year, type, link) {
     // 1. 存入 Supabase
-    const { error } = await supabase
+    const { error } = await supabase_
         .from('exams')
         .insert([{ grade, sub, prof, year, type, link }]);
 
@@ -95,7 +95,7 @@ async function removeAt(index) {
     const targetId = allExams[index].id; // 確保你的 Supabase 表格有 id 欄位
 
     if (confirm(`確定要刪除第 ${index} 筆資料嗎？`)) {
-        const { error } = await supabase
+        const { error } = await supabase_
             .from('exams')
             .delete()
             .eq('id', targetId);
