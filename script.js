@@ -11,8 +11,8 @@ try {
 }
 
 // 全域變數
-let data = {};       // 選單階層結構 { 年級: { subjects: [...], teachers: { 科目: [...] } } }
-let allExams = [];   // 原始完整資料
+let data = {};       
+let allExams = [];   
 
 // DOM 元素
 const gradeSelect = document.getElementById('grade');
@@ -22,7 +22,6 @@ const tableBody = document.getElementById('examTableBody');
 
 // 1. 從 Supabase 讀取資料
 async function loadExamsFromSupabase() {
-    // 防呆：如果沒初始化成功，嘗試重新抓取一次 window.supabase
     if (!MYsupabase && window.supabase) {
         MYsupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
@@ -35,18 +34,24 @@ async function loadExamsFromSupabase() {
     try {
         const { data: exams, error } = await MYsupabase
             .from('exams')
-            .select('*')
-            .order('year', { ascending: false });
+            .select('*');
 
         if (error) throw error;
 
         allExams = exams || [];
+        
+        // 🔍 在 Console 印出抓到的資料結構，方便確認欄位名稱
+        console.log("從 Supabase 抓到的原始資料：", allExams);
+
         data = {};
 
-        // 整理階層資料 (年級 -> 科目 -> 老師)
+        // 整理階層資料 (防呆：欄位不存在時不崩潰)
         allExams.forEach(item => {
-            const { grade, sub, prof } = item;
-            if (!grade || !sub) return;
+            const grade = item.grade || '未分類';
+            const sub = item.sub || item.subject || '';
+            const prof = item.prof || item.teacher || '';
+
+            if (!sub) return;
 
             if (!data[grade]) {
                 data[grade] = { subjects: [], teachers: {} };
@@ -62,7 +67,6 @@ async function loadExamsFromSupabase() {
             }
         });
 
-        // 預設初始化下拉選單選項，並印出全部表格
         initDropdownOptions();
         renderTable();
 
@@ -71,21 +75,21 @@ async function loadExamsFromSupabase() {
     }
 }
 
-// 2. 初始化選單選項（預設列出所有不重複的科目與教師）
+// 2. 初始化選單選項
 function initDropdownOptions() {
     if (!subjectSelect || !teacherSelect) return;
 
-    // 清空並重設預設提示
     subjectSelect.innerHTML = '<option value="">所有科目</option>';
     teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
 
-    // 收集全部不重複的科目與教師
     const allSubjects = new Set();
     const allTeachers = new Set();
 
     allExams.forEach(exam => {
-        if (exam.sub) allSubjects.add(exam.sub);
-        if (exam.prof) allTeachers.add(exam.prof);
+        const sub = exam.sub || exam.subject;
+        const prof = exam.prof || exam.teacher;
+        if (sub) allSubjects.add(sub);
+        if (prof) allTeachers.add(prof);
     });
 
     allSubjects.forEach(sub => {
@@ -103,7 +107,7 @@ function initDropdownOptions() {
     });
 }
 
-// 3. 渲染表格（未選擇任何條件時 = 顯示全部）
+// 3. 渲染表格（未選擇條件時顯示全部）
 function renderTable() {
     if (!tableBody) return;
 
@@ -112,9 +116,14 @@ function renderTable() {
     const selectedTeacher = teacherSelect ? teacherSelect.value : '';
 
     const filtered = allExams.filter(exam => {
-        const matchGrade = !selectedGrade || exam.grade === selectedGrade;
-        const matchSubject = !selectedSubject || exam.sub === selectedSubject;
-        const matchTeacher = !selectedTeacher || exam.prof === selectedTeacher;
+        const examGrade = exam.grade || '';
+        const examSub = exam.sub || exam.subject || '';
+        const examProf = exam.prof || exam.teacher || '';
+
+        const matchGrade = !selectedGrade || examGrade === selectedGrade;
+        const matchSubject = !selectedSubject || examSub === selectedSubject;
+        const matchTeacher = !selectedTeacher || examProf === selectedTeacher;
+        
         return matchGrade && matchSubject && matchTeacher;
     });
 
@@ -140,8 +149,8 @@ function renderTable() {
 
         row.innerHTML = `
             <td class="border border-gray-700 px-4 py-2 text-center">${exam.year || ''}</td>
-            <td class="border border-gray-700 px-4 py-2 font-medium">${exam.sub || ''}</td>
-            <td class="border border-gray-700 px-4 py-2">${exam.prof || ''}</td>
+            <td class="border border-gray-700 px-4 py-2 font-medium">${exam.sub || exam.subject || ''}</td>
+            <td class="border border-gray-700 px-4 py-2">${exam.prof || exam.teacher || ''}</td>
             <td class="border border-gray-700 px-4 py-2 text-center">${exam.type || ''}</td>
             <td class="border border-gray-700 px-4 py-2 text-center text-sm text-gray-300">${exam.scope || '-'}</td>
             <td class="border border-gray-700 px-4 py-2 text-center">
@@ -163,7 +172,6 @@ function renderTable() {
 function updateGradeUI() {
     const selectedGrade = gradeSelect.value;
 
-    // 如果切回「所有年級」，恢復全域預設選單選項
     if (!selectedGrade) {
         initDropdownOptions();
         return;
@@ -205,10 +213,10 @@ if (subjectSelect) {
                 teacherSelect.appendChild(opt);
             });
         } else if (selectedSub) {
-            // 若未選擇年級但選了科目，自動帶出該科目的所有教授
             const teachersForSub = new Set();
-            allExams.filter(e => e.sub === selectedSub).forEach(e => {
-                if (e.prof) teachersForSub.add(e.prof);
+            allExams.filter(e => (e.sub || e.subject) === selectedSub).forEach(e => {
+                const prof = e.prof || e.teacher;
+                if (prof) teachersForSub.add(prof);
             });
             teachersForSub.forEach(t => {
                 const opt = document.createElement('option');
@@ -225,5 +233,5 @@ if (teacherSelect) {
     teacherSelect.addEventListener('change', renderTable);
 }
 
-// 6. 網頁開啟時執行
+// 6. 執行讀取
 document.addEventListener('DOMContentLoaded', loadExamsFromSupabase);
