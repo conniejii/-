@@ -39,13 +39,9 @@ async function loadExamsFromSupabase() {
         if (error) throw error;
 
         allExams = exams || [];
-        
-        // 🔍 在 Console 印出抓到的資料結構，方便確認欄位名稱
-        console.log("從 Supabase 抓到的原始資料：", allExams);
-
         data = {};
 
-        // 整理階層資料 (防呆：欄位不存在時不崩潰)
+        // 整理階層資料
         allExams.forEach(item => {
             const grade = item.grade || '未分類';
             const sub = item.sub || item.subject || '';
@@ -107,7 +103,7 @@ function initDropdownOptions() {
     });
 }
 
-// 3. 渲染表格（未選擇條件時顯示全部）
+// 3. 渲染表格（已補上「年級」欄位）
 function renderTable() {
     if (!tableBody) return;
 
@@ -132,7 +128,7 @@ function renderTable() {
     if (filtered.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="border border-gray-700 px-4 py-8 text-center text-gray-400">
+                <td colspan="8" class="border border-gray-700 px-4 py-8 text-center text-gray-400">
                     目前沒有符合條件的考古題喔！
                 </td>
             </tr>
@@ -148,6 +144,7 @@ function renderTable() {
         const ansPdfUrl = exam.ans_url || exam.ansLink;
 
         row.innerHTML = `
+            <td class="border border-gray-700 px-4 py-2 text-center">${exam.grade || '-'}</td>
             <td class="border border-gray-700 px-4 py-2 text-center">${exam.year || ''}</td>
             <td class="border border-gray-700 px-4 py-2 font-medium">${exam.sub || exam.subject || ''}</td>
             <td class="border border-gray-700 px-4 py-2">${exam.prof || exam.teacher || ''}</td>
