@@ -19,6 +19,12 @@ const subjectSelect = document.getElementById('subject');
 const teacherSelect = document.getElementById('teacher');
 const tableBody = document.getElementById('examTableBody');
 
+// 💡 乾淨的字串處理：只去掉前後空白
+function clean(str) {
+    if (!str) return '';
+    return str.toString().trim();
+}
+
 // 1. 從 Supabase 讀取資料
 async function loadExamsFromSupabase() {
     if (!MYsupabase && window.supabase) {
@@ -48,7 +54,7 @@ async function loadExamsFromSupabase() {
     }
 }
 
-// 2. 初始化選單選項（使用 Set 保證所有選項 100% 不重複）
+// 2. 初始化選單選項（預設載入全部）
 function initDropdownOptions() {
     if (!gradeSelect || !subjectSelect || !teacherSelect) return;
 
@@ -61,9 +67,9 @@ function initDropdownOptions() {
     const allTeachers = new Set();
 
     allExams.forEach(exam => {
-        const grade = (exam.grade || '').trim();
-        const sub = (exam.sub || exam.subject || '').trim();
-        const prof = (exam.prof || exam.teacher || '').trim();
+        const grade = clean(exam.grade);
+        const sub = clean(exam.sub || exam.subject);
+        const prof = clean(exam.prof || exam.teacher);
 
         if (grade) allGrades.add(grade);
         if (sub) allSubjects.add(sub);
@@ -81,10 +87,11 @@ function initDropdownOptions() {
     });
 }
 
-// 3. 當「年級」改變時更新科目選單（去重）
+// 3. 當「年級」改變時更新科目選單（統一用 clean 去空白）
 function updateGradeUI() {
-    const selectedGrade = gradeSelect.value;
+    const selectedGrade = clean(gradeSelect.value);
 
+    // 如果切回「所有年級」，恢復預設全區域選單
     if (!selectedGrade) {
         initDropdownOptions();
         return;
@@ -94,54 +101,61 @@ function updateGradeUI() {
     teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
 
     const subjectsInGrade = new Set();
-    allExams
-        .filter(exam => exam.grade === selectedGrade)
-        .forEach(exam => {
-            const sub = exam.sub || exam.subject;
-            if (sub) subjectsInGrade.add(sub);
-        });
+
+    allExams.forEach(exam => {
+        const examGrade = clean(exam.grade);
+        const examSub = clean(exam.sub || exam.subject);
+
+        // 比對時去空白，存入 Set 時也去空白
+        if (examGrade === selectedGrade && examSub) {
+            subjectsInGrade.add(examSub);
+        }
+    });
 
     subjectsInGrade.forEach(sub => {
         subjectSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
     });
 }
 
-// 4. 當「科目」改變時更新教師選單（去重）
+// 4. 當「科目」改變時更新教師選單
 function updateSubjectUI() {
-    const selectedGrade = gradeSelect.value;
-    const selectedSub = subjectSelect.value;
+    const selectedGrade = clean(gradeSelect.value);
+    const selectedSub = clean(subjectSelect.value);
 
     teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
 
     const teachersForSub = new Set();
-    allExams
-        .filter(exam => {
-            const matchGrade = !selectedGrade || exam.grade === selectedGrade;
-            const matchSub = !selectedSub || (exam.sub || exam.subject) === selectedSub;
-            return matchGrade && matchSub;
-        })
-        .forEach(exam => {
-            const prof = exam.prof || exam.teacher;
-            if (prof) teachersForSub.add(prof);
-        });
+
+    allExams.forEach(exam => {
+        const examGrade = clean(exam.grade);
+        const examSub = clean(exam.sub || exam.subject);
+        const examProf = clean(exam.prof || exam.teacher);
+
+        const matchGrade = !selectedGrade || examGrade === selectedGrade;
+        const matchSub = !selectedSub || examSub === selectedSub;
+
+        if (matchGrade && matchSub && examProf) {
+            teachersForSub.add(examProf);
+        }
+    });
 
     teachersForSub.forEach(prof => {
         teacherSelect.innerHTML += `<option value="${prof}">${prof}</option>`;
     });
 }
 
-// 5. 渲染表格（修正欄位順序：年級 -> 學年度 -> 科目 -> 教師 -> 類別 -> 範圍 -> 題目 -> 答案）
+// 5. 渲染表格
 function renderTable() {
     if (!tableBody) return;
 
-    const selectedGrade = gradeSelect ? gradeSelect.value : '';
-    const selectedSubject = subjectSelect ? subjectSelect.value : '';
-    const selectedTeacher = teacherSelect ? teacherSelect.value : '';
+    const selectedGrade = clean(gradeSelect ? gradeSelect.value : '');
+    const selectedSubject = clean(subjectSelect ? subjectSelect.value : '');
+    const selectedTeacher = clean(teacherSelect ? teacherSelect.value : '');
 
     const filtered = allExams.filter(exam => {
-        const examGrade = (exam.grade || '').trim();
-        const examSub = (exam.sub || exam.subject || '').trim();
-        const examProf = (exam.prof || exam.teacher || ''_).trim();
+        const examGrade = clean(exam.grade);
+        const examSub = clean(exam.sub || exam.subject);
+        const examProf = clean(exam.prof || exam.teacher);
 
         const matchGrade = !selectedGrade || examGrade === selectedGrade;
         const matchSubject = !selectedSubject || examSub === selectedSubject;
