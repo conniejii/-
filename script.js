@@ -61,9 +61,9 @@ function initDropdownOptions() {
     const allTeachers = new Set();
 
     allExams.forEach(exam => {
-        const grade = exam.grade;
-        const sub = exam.sub || exam.subject;
-        const prof = exam.prof || exam.teacher;
+        const grade = (exam.grade || '').trim();
+        const sub = (exam.sub || exam.subject || '').trim();
+        const prof = (exam.prof || exam.teacher || '').trim();
 
         if (grade) allGrades.add(grade);
         if (sub) allSubjects.add(sub);
