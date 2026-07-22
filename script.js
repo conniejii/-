@@ -1,6 +1,6 @@
 const SUPABASE_URL = 'https://eyvezsooeguaclwwlntj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_u39s6S8yq4S2beuR9IKIGg_flTR3Sfm'; 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const MYsupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let data = {};
 let allExams = [];
@@ -12,7 +12,7 @@ const tableBody = document.getElementById('examTableBody');
 
 async function loadMenuDataFromSupabase() {
     try {
-        const { data: exams, error } = await supabase
+        const { data: exams, error } = await MYsupabase
             .from('exams')
             .select('grade, sub, prof');
 
@@ -49,7 +49,7 @@ async function loadMenuDataFromSupabase() {
 
 async function loadExamsFromSupabase() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await MYsupabase
             .from('exams')
             .select('*')
             .order('year', { ascending: false });
