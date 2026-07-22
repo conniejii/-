@@ -38,7 +38,6 @@ async function loadMenuDataFromSupabase() {
             }
         });
 
-        // 若你有撰寫 initSelectOptions()，可在此呼叫
         if (typeof initSelectOptions === 'function') {
             initSelectOptions();
         }
