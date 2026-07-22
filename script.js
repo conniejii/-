@@ -73,21 +73,37 @@ async function loadExamsFromSupabase() {
 
 // 2. 初始化選單選項
 function initDropdownOptions() {
-    if (!subjectSelect || !teacherSelect) return;
+    if (!gradeSelect || !subjectSelect || !teacherSelect) return;
 
+    // 清空並設定預設選項
+    gradeSelect.innerHTML = '<option value="">所有年級</option>';
     subjectSelect.innerHTML = '<option value="">所有科目</option>';
     teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
 
+    const allGrades = new Set();
     const allSubjects = new Set();
     const allTeachers = new Set();
 
+    // 收集所有出現過的年級、科目、教師
     allExams.forEach(exam => {
+        const grade = exam.grade;
         const sub = exam.sub || exam.subject;
         const prof = exam.prof || exam.teacher;
+
+        if (grade) allGrades.add(grade);
         if (sub) allSubjects.add(sub);
         if (prof) allTeachers.add(prof);
     });
 
+    // 1. 動態填充「年級」選單
+    allGrades.forEach(grade => {
+        const opt = document.createElement('option');
+        opt.value = grade;
+        opt.textContent = grade;
+        gradeSelect.appendChild(opt);
+    });
+
+    // 2. 動態填充「科目」選單
     allSubjects.forEach(sub => {
         const opt = document.createElement('option');
         opt.value = sub;
@@ -95,6 +111,7 @@ function initDropdownOptions() {
         subjectSelect.appendChild(opt);
     });
 
+    // 3. 動態填充「教師」選單
     allTeachers.forEach(prof => {
         const opt = document.createElement('option');
         opt.value = prof;
