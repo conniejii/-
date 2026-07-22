@@ -9,16 +9,16 @@ try {
 }
 
 // 全域變數
-let data = {};       // 選單階層結構
-let allExams = [];   // 原始完整資料
+let data = {};       // 儲存選單結構 { 年級: { subjects: [...], teachers: { 科目: [...] } } }
+let allExams = [];   // 儲存 Supabase 抓回來的所有考古題原始資料
 
-// DOM 元素
+// 取得 DOM 元素
 const gradeSelect = document.getElementById('grade');
 const subjectSelect = document.getElementById('subject');
 const teacherSelect = document.getElementById('teacher');
 const tableBody = document.getElementById('examTableBody');
 
-// 1. 從 Supabase 讀取資料
+// 1. 從 Supabase 讀取資料並建立 data 選單結構
 async function loadExamsFromSupabase() {
     if (!MYsupabase) return;
 
@@ -31,9 +31,9 @@ async function loadExamsFromSupabase() {
         if (error) throw error;
 
         allExams = exams || [];
-        data = {};
+        data = {}; // 重置選單資料結構
 
-        // 整理階層資料 (年級 -> 科目 -> 老師)
+        // 整理選單要用的階層資料 (年級 -> 科目 -> 老師)
         allExams.forEach(item => {
             const { grade, sub, prof } = item;
             if (!grade || !sub) return;
@@ -52,15 +52,15 @@ async function loadExamsFromSupabase() {
             }
         });
 
-        // 預設直接顯示全部資料
+        // 載入完成後先畫出完整表格
         renderTable();
 
     } catch (err) {
-        console.error("無法讀取資料：", err.message);
+        console.error("無法從 Supabase 讀取考古題資料：", err.message);
     }
 }
 
-// 2. 渲染表格（沒選條件時 = 顯示全部）
+// 2. 渲染表格（含條件過濾）
 function renderTable() {
     if (!tableBody) return;
 
@@ -68,7 +68,6 @@ function renderTable() {
     const selectedSubject = subjectSelect ? subjectSelect.value : '';
     const selectedTeacher = teacherSelect ? teacherSelect.value : '';
 
-    // 篩選邏輯：如果 selectedGrade/Subject/Teacher 為空字串，代表「不限」，全部通過！
     const filtered = allExams.filter(exam => {
         const matchGrade = !selectedGrade || exam.grade === selectedGrade;
         const matchSubject = !selectedSubject || exam.sub === selectedSubject;
@@ -117,39 +116,44 @@ function renderTable() {
     });
 }
 
-// 3. 更新年級對應的科目選單
+// 3. 更新「年級」對應的「科目」選單
 function updateGradeUI() {
     const selectedGrade = gradeSelect.value;
 
-    subjectSelect.innerHTML = '<option value="">所有科目</option>';
-    teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
+    // 如果沒選年級，清空科目與老師選單
+    if (!selectedGrade) {
+        subjectSelect.innerHTML = '<option value="">科目</option>';
+        teacherSelect.innerHTML = '<option value="">授課教師</option>';
+        return;
+    }
 
-    if (!selectedGrade) return;
-
+    // 根據 data 重新產生科目選項
     const currentSubjects = data[selectedGrade] ? data[selectedGrade].subjects : [];
     
+    subjectSelect.innerHTML = '<option value="">科目</option>';
     currentSubjects.forEach(sub => {
         const opt = document.createElement('option');
         opt.value = sub;
         opt.textContent = sub;
         subjectSelect.appendChild(opt);
     });
+
+    teacherSelect.innerHTML = '<option value="">授課教師</option>';
 }
 
 // 4. 事件監聽設定
 if (gradeSelect) {
     gradeSelect.addEventListener('change', function() {
-        updateGradeUI();
-        renderTable();
+        updateGradeUI(); // 更新科目選單
+        renderTable();   // 同時過濾表格
     });
 }
 
 if (subjectSelect) {
     subjectSelect.addEventListener('change', function() {
         const selectedSub = this.value;
+        teacherSelect.innerHTML = '<option value="">授課教師</option>';
         const selectedGrade = gradeSelect.value;
-        
-        teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
         
         if (selectedGrade && selectedSub && data[selectedGrade] && data[selectedGrade].teachers[selectedSub]) {
             data[selectedGrade].teachers[selectedSub].forEach(t => {
@@ -159,7 +163,7 @@ if (subjectSelect) {
                 teacherSelect.appendChild(opt);
             });
         }
-        renderTable();
+        renderTable(); // 同時過濾表格
     });
 }
 
@@ -167,5 +171,5 @@ if (teacherSelect) {
     teacherSelect.addEventListener('change', renderTable);
 }
 
-// 5. 網頁開啟時執行
+// 5. 網頁準備好後開始載入
 document.addEventListener('DOMContentLoaded', loadExamsFromSupabase);
