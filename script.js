@@ -1,7 +1,16 @@
-// 1. 初始化 Supabase
 const SUPABASE_URL = 'https://eyvezsooeguaclwwlntj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_u39s6S8yq4S2beuR9IKIGg_flTR3Sfm'; 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let MYsupabase;
+try {
+    MYsupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+    console.error("Supabase SDK 尚未順利載入", e);
+}
+
+// ----------------------------------------------------
+// 下面是新增的抓資料與呈現邏輯
+// ----------------------------------------------------
 
 async function loadExams() {
     const tableBody = document.getElementById('examTableBody');
@@ -13,6 +22,7 @@ async function loadExams() {
     }
 
     try {
+        // 向 Supabase 的 exams 資料表請求所有欄位
         const { data, error } = await MYsupabase
             .from('exams')
             .select('*');
@@ -28,6 +38,7 @@ async function loadExams() {
             return;
         }
 
+        // 把抓到的資料轉成表格 HTML 渲染出來
         tableBody.innerHTML = data.map(exam => {
             const pdfUrl = exam.file_url || exam.link;
             const ansPdfUrl = exam.ans_url || exam.ansLink;
@@ -54,4 +65,5 @@ async function loadExams() {
     }
 }
 
+// 網頁載入完成後自動發送請求
 document.addEventListener('DOMContentLoaded', loadExams);
