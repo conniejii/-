@@ -139,9 +139,9 @@ function renderTable() {
     const selectedTeacher = teacherSelect ? teacherSelect.value : '';
 
     const filtered = allExams.filter(exam => {
-        const examGrade = exam.grade || '';
-        const examSub = exam.sub || exam.subject || '';
-        const examProf = exam.prof || exam.teacher || '';
+        const examGrade = (exam.grade || '').trim();
+        const examSub = (exam.sub || exam.subject || '').trim();
+        const examProf = (exam.prof || exam.teacher || ''_).trim();
 
         const matchGrade = !selectedGrade || examGrade === selectedGrade;
         const matchSubject = !selectedSubject || examSub === selectedSubject;
