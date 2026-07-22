@@ -11,7 +11,6 @@ try {
 }
 
 // 全域變數
-let data = {};       
 let allExams = [];   
 
 // DOM 元素
@@ -39,30 +38,8 @@ async function loadExamsFromSupabase() {
         if (error) throw error;
 
         allExams = exams || [];
-        data = {};
 
-        // 整理階層資料
-        allExams.forEach(item => {
-            const grade = item.grade || '未分類';
-            const sub = item.sub || item.subject || '';
-            const prof = item.prof || item.teacher || '';
-
-            if (!sub) return;
-
-            if (!data[grade]) {
-                data[grade] = { subjects: [], teachers: {} };
-            }
-            if (!data[grade].subjects.includes(sub)) {
-                data[grade].subjects.push(sub);
-            }
-            if (!data[grade].teachers[sub]) {
-                data[grade].teachers[sub] = [];
-            }
-            if (prof && !data[grade].teachers[sub].includes(prof)) {
-                data[grade].teachers[sub].push(prof);
-            }
-        });
-
+        // 初始化選單與表格
         initDropdownOptions();
         renderTable();
 
@@ -71,11 +48,10 @@ async function loadExamsFromSupabase() {
     }
 }
 
-// 2. 初始化選單選項
+// 2. 初始化選單選項（使用 Set 保證所有選項 100% 不重複）
 function initDropdownOptions() {
     if (!gradeSelect || !subjectSelect || !teacherSelect) return;
 
-    // 清空並設定預設選項
     gradeSelect.innerHTML = '<option value="">所有年級</option>';
     subjectSelect.innerHTML = '<option value="">所有科目</option>';
     teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
@@ -84,7 +60,6 @@ function initDropdownOptions() {
     const allSubjects = new Set();
     const allTeachers = new Set();
 
-    // 收集所有出現過的年級、科目、教師
     allExams.forEach(exam => {
         const grade = exam.grade;
         const sub = exam.sub || exam.subject;
@@ -95,32 +70,67 @@ function initDropdownOptions() {
         if (prof) allTeachers.add(prof);
     });
 
-    // 1. 動態填充「年級」選單
     allGrades.forEach(grade => {
-        const opt = document.createElement('option');
-        opt.value = grade;
-        opt.textContent = grade;
-        gradeSelect.appendChild(opt);
+        gradeSelect.innerHTML += `<option value="${grade}">${grade}</option>`;
     });
-
-    // 2. 動態填充「科目」選單
     allSubjects.forEach(sub => {
-        const opt = document.createElement('option');
-        opt.value = sub;
-        opt.textContent = sub;
-        subjectSelect.appendChild(opt);
+        subjectSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
     });
-
-    // 3. 動態填充「教師」選單
     allTeachers.forEach(prof => {
-        const opt = document.createElement('option');
-        opt.value = prof;
-        opt.textContent = prof;
-        teacherSelect.appendChild(opt);
+        teacherSelect.innerHTML += `<option value="${prof}">${prof}</option>`;
     });
 }
 
-// 3. 渲染表格（完全修正欄位順序與對齊）
+// 3. 當「年級」改變時更新科目選單（去重）
+function updateGradeUI() {
+    const selectedGrade = gradeSelect.value;
+
+    if (!selectedGrade) {
+        initDropdownOptions();
+        return;
+    }
+
+    subjectSelect.innerHTML = '<option value="">所有科目</option>';
+    teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
+
+    const subjectsInGrade = new Set();
+    allExams
+        .filter(exam => exam.grade === selectedGrade)
+        .forEach(exam => {
+            const sub = exam.sub || exam.subject;
+            if (sub) subjectsInGrade.add(sub);
+        });
+
+    subjectsInGrade.forEach(sub => {
+        subjectSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+    });
+}
+
+// 4. 當「科目」改變時更新教師選單（去重）
+function updateSubjectUI() {
+    const selectedGrade = gradeSelect.value;
+    const selectedSub = subjectSelect.value;
+
+    teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
+
+    const teachersForSub = new Set();
+    allExams
+        .filter(exam => {
+            const matchGrade = !selectedGrade || exam.grade === selectedGrade;
+            const matchSub = !selectedSub || (exam.sub || exam.subject) === selectedSub;
+            return matchGrade && matchSub;
+        })
+        .forEach(exam => {
+            const prof = exam.prof || exam.teacher;
+            if (prof) teachersForSub.add(prof);
+        });
+
+    teachersForSub.forEach(prof => {
+        teacherSelect.innerHTML += `<option value="${prof}">${prof}</option>`;
+    });
+}
+
+// 5. 渲染表格（修正欄位順序：年級 -> 學年度 -> 科目 -> 教師 -> 類別 -> 範圍 -> 題目 -> 答案）
 function renderTable() {
     if (!tableBody) return;
 
@@ -182,29 +192,7 @@ function renderTable() {
     });
 }
 
-// 4. 當選擇年級時更新動態選單
-function updateGradeUI() {
-    const selectedGrade = gradeSelect.value;
-
-    if (!selectedGrade) {
-        initDropdownOptions();
-        return;
-    }
-
-    subjectSelect.innerHTML = '<option value="">所有科目</option>';
-    teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
-
-    const currentSubjects = data[selectedGrade] ? data[selectedGrade].subjects : [];
-    
-    currentSubjects.forEach(sub => {
-        const opt = document.createElement('option');
-        opt.value = sub;
-        opt.textContent = sub;
-        subjectSelect.appendChild(opt);
-    });
-}
-
-// 5. 事件監聽設定
+// 6. 事件監聽
 if (gradeSelect) {
     gradeSelect.addEventListener('change', function() {
         updateGradeUI();
@@ -214,31 +202,7 @@ if (gradeSelect) {
 
 if (subjectSelect) {
     subjectSelect.addEventListener('change', function() {
-        const selectedSub = this.value;
-        const selectedGrade = gradeSelect.value;
-        
-        teacherSelect.innerHTML = '<option value="">所有授課教師</option>';
-        
-        if (selectedGrade && selectedSub && data[selectedGrade] && data[selectedGrade].teachers[selectedSub]) {
-            data[selectedGrade].teachers[selectedSub].forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t; 
-                opt.textContent = t;
-                teacherSelect.appendChild(opt);
-            });
-        } else if (selectedSub) {
-            const teachersForSub = new Set();
-            allExams.filter(e => (e.sub || e.subject) === selectedSub).forEach(e => {
-                const prof = e.prof || e.teacher;
-                if (prof) teachersForSub.add(prof);
-            });
-            teachersForSub.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t;
-                opt.textContent = t;
-                teacherSelect.appendChild(opt);
-            });
-        }
+        updateSubjectUI();
         renderTable();
     });
 }
@@ -247,5 +211,5 @@ if (teacherSelect) {
     teacherSelect.addEventListener('change', renderTable);
 }
 
-// 6. 執行讀取
+// 7. 網頁開啟時執行
 document.addEventListener('DOMContentLoaded', loadExamsFromSupabase);
