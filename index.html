@@ -39,13 +39,16 @@
                 <th class="border border-gray-400 px-4 py-2">學年度</th>
                 <th class="border border-gray-400 px-4 py-2">科目名稱</th>
                 <th class="border border-gray-400 px-4 py-2">授課教授</th>
-                <th class="border border-gray-400 px-4 py-2">考試類別</th> 
-                <th class="border border-gray-400 px-4 py-2">檔案</th> 
+                <th class="border border-gray-400 px-4 py-2">考試類別</th>
+                <th class="border border-gray-400 px-4 py-2">考試範圍</th> 
+                <th class="border border-gray-400 px-4 py-2">題目檔案</th>
+                <th class="border border-gray-400 px-4 py-2">解答檔案</th>  
                 </tr>
              </thead>
             <tbody id="examTableBody">
             </tbody>
         </table>
+        
     <div class="flex justify-end max-w-4xl mx-auto mb-4 mr-50 mt-10">
         <button onclick="toggleAdmin()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-1 rounded-full text-sm transition">
             <span id="toggleText">➕ 新增考古題</span>
@@ -89,16 +92,34 @@
             <div>
             <label class="block text-gray-400 text-sm mb-1">輸入考試類別</label>
             <input type="text" id="testType" placeholder="例如：期中考、小考1" 
-               class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div>
-            <label class="block text-gray-400 text-sm mb-1">上傳檔案</label>
-            <input type="text" id="newfile" placeholder="1" 
-               class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+           <label class="block text-gray-400 text-sm mb-1">輸入考試範圍</label>
+            <input type="text" id="testScope" placeholder="不確定可不填，例：ch3-2 to ch4-1" 
+                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+            <label class="block text-gray-400 text-sm mb-1">上傳題目檔案 (PDF)</label>
+            <input type="file" id="newfile" accept=".pdf" 
+                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-500">
+            </div>
+
+            <div>
+            <label class="block text-gray-400 text-sm mb-1">上傳答案檔案 (PDF)</label>
+            <input type="file" id="ansfile" accept=".pdf" 
+                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-500">
             </div>
     </div>
-     <button onclick="handleManualAdd()" class="w-full bg-blue-600 ...">確認新增</button>
+
+    <!-- 確認按鈕 -->
+    <button onclick="handleManualAdd()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded transition">
+        確認新增
+    </button>
+</div>
+
 
     </div>
 
@@ -106,4 +127,3 @@
         <script src="script.js"></script> 
     </body>
 </html>
-
