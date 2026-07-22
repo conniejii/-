@@ -118,19 +118,22 @@ function renderTable() {
     const filtered = allExams.filter(exam => {
         return (!sGrade || exam.grade === sGrade) &&
                (!sSub || exam.sub === sSub) &&
-               (!sProf || exam.pro === sProf);
+               (!sProf || exam.prof === sProf);
     });
 
-    filtered.forEach((exam, index) => {
-        const originalIndex = allExams.indexOf(exam);
+    filtered.forEach(exam => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="border border-gray-700 px-4 py-2 text-center">${exam.year}</td>
-            <td class="border border-gray-700 px-4 py-2">${exam.sub}</td>
-            <td class="border border-gray-700 px-4 py-2">${exam.pro}</td>
-            <td class="border border-gray-700 px-4 py-2 text-center">${exam.type}</td> 
+            <td class="border border-gray-700 px-4 py-2 text-center">${exam.year || ''}</td>
+            <td class="border border-gray-700 px-4 py-2">${exam.sub || ''}</td>
+            <td class="border border-gray-700 px-4 py-2">${exam.prof || ''}</td>
+            <td class="border border-gray-700 px-4 py-2 text-center">${exam.type || '期中考'}</td>
+            <td class="border border-gray-700 px-4 py-2 text-center">${exam.scope || '全範圍'}</td>
             <td class="border border-gray-700 px-4 py-2 text-center text-blue-400">
-                <a href="${exam.link}" target="_blank" class="hover:underline">下載</a>
+                <a href="${exam.link || '#'}" target="_blank" class="hover:underline">下載</a>
+            </td>
+            <td class="border border-gray-700 px-4 py-2 text-center text-blue-400">
+                <a href="${exam.ansLink || '#'}" target="_blank" class="hover:underline">下載</a>
             </td>
         `;
         tableBody.appendChild(row);
