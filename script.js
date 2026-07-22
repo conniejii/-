@@ -1,6 +1,12 @@
 const SUPABASE_URL = 'https://eyvezsooeguaclwwlntj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_u39s6S8yq4S2beuR9IKIGg_flTR3Sfm'; 
-const MYsupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let MYsupabase;
+try {
+    MYsupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+    console.error("Supabase SDK 尚未順利載入", e);
+}
 
 let data = {};
 let allExams = [];
@@ -118,9 +124,25 @@ function renderTable() {
     });
 }
 
+// 切換新增考古題面板顯示/隱藏
+function toggleAdmin() {
+    const adminPanel = document.getElementById('adminPanel');
+    const toggleText = document.getElementById('toggleText');
+    if (!adminPanel || !toggleText) return;
+
+    if (adminPanel.classList.contains('hidden')) {
+        adminPanel.classList.remove('hidden');
+        toggleText.textContent = '❌ 關閉新增區塊';
+    } else {
+        adminPanel.classList.add('hidden');
+        toggleText.textContent = '➕ 新增考古題';
+    }
+}
+
 async function initApp() {
     await loadMenuDataFromSupabase();
     await loadExamsFromSupabase();
 }
 
-initApp();
+// 確保 DOM 與資源載入完成後執行
+document.addEventListener('DOMContentLoaded', initApp);
