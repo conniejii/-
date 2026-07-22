@@ -1,19 +1,15 @@
-// 1. 初始化 Supabase
 const SUPABASE_URL = 'https://eyvezsooeguaclwwlntj.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_u39s6S8yq4S2beuR9IKIGg_flTR3Sfm'; 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 全域變數
 let data = {};
 let allExams = [];
 
-// DOM 元素抓取
 const gradeSelect = document.getElementById('grade');
 const subjectSelect = document.getElementById('subject');
 const teacherSelect = document.getElementById('teacher');
 const tableBody = document.getElementById('examTableBody');
 
-// 2. 從 Supabase 動態載入選單結構
 async function loadMenuDataFromSupabase() {
     try {
         const { data: exams, error } = await supabase
@@ -52,7 +48,6 @@ async function loadMenuDataFromSupabase() {
     }
 }
 
-// 3. 從 Supabase 讀取所有考古題
 async function loadExamsFromSupabase() {
     try {
         const { data, error } = await supabase
@@ -70,7 +65,6 @@ async function loadExamsFromSupabase() {
     }
 }
 
-// 4. 渲染與篩選表格
 function renderTable() {
     const selectedGrade = gradeSelect ? gradeSelect.value : '';
     const selectedSubject = subjectSelect ? subjectSelect.value : '';
@@ -125,7 +119,6 @@ function renderTable() {
     });
 }
 
-// 5. 網頁載入時自動執行測試
 async function initApp() {
     await loadMenuDataFromSupabase();
     await loadExamsFromSupabase();
