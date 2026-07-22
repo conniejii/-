@@ -103,7 +103,7 @@ function initDropdownOptions() {
     });
 }
 
-// 3. 渲染表格（已補上「年級」欄位）
+// 3. 渲染表格（完全修正欄位順序與對齊）
 function renderTable() {
     if (!tableBody) return;
 
