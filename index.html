@@ -2,129 +2,119 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的考古題系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 加上 defer 確保 Supabase SDK 載入完成後才執行腳本 -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="script.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen p-10">
-        <h1 class="text-3xl font-bold text-center text-blue-200 mb-10">
+
+    <h1 class="text-3xl font-bold text-center text-blue-200 mb-10">
         我的第一個考古題系統
-        </h1>
-        
-        <div class="flex gap-9 justify-center mb-6">
-            <select id="grade" class="bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">年級</option>
-                <option value="Freshman1">大一上</option>
-                <option value="Freshman2">大一下</option>
-                <option value="Sophomore1">大二上</option>
-                <option value="Sophomore2">大二下</option>
-                <option value="Junior1">大三上</option>
-                <option value="Junior2">大三下</option>
-                <option value="Senior1">大四上</option>
-                <option value="Senior2">大四下</option>
-                <option value="General">通識</option>
-            </select>
+    </h1>
+    
+    <!-- 篩選選單 -->
+    <div class="flex gap-4 justify-center mb-6">
+        <select id="grade" class="bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">年級</option>
+            <option value="Freshman1">大一上</option>
+            <option value="Freshman2">大一下</option>
+            <option value="Sophomore1">大二上</option>
+            <option value="Sophomore2">大二下</option>
+            <option value="Junior1">大三上</option>
+            <option value="Junior2">大三下</option>
+            <option value="Senior1">大四上</option>
+            <option value="Senior2">大四下</option>
+            <option value="General">通識</option>
+        </select>
 
-            <select id="subject" class="bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">科目</option>
-            </select>
+        <select id="subject" class="bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">科目</option>
+        </select>
 
-            <select id="teacher" class="bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">老師</option>
-            </select>
-        </div>
+        <select id="teacher" class="bg-gray-800 border border-gray-700 text-white rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">老師</option>
+        </select>
+    </div>
 
-        <table class="mx-auto border-collapse border border-gray-700 w-full max-w-4xl">
-            <thead>
-                <tr>
-                <th class="border border-gray-400 px-4 py-2">學年度</th>
-                <th class="border border-gray-400 px-4 py-2">科目名稱</th>
-                <th class="border border-gray-400 px-4 py-2">授課教授</th>
-                <th class="border border-gray-400 px-4 py-2">考試類別</th>
-                <th class="border border-gray-400 px-4 py-2">考試範圍</th> 
-                <th class="border border-gray-400 px-4 py-2">題目檔案</th>
-                <th class="border border-gray-400 px-4 py-2">解答檔案</th>  
-                </tr>
-             </thead>
-            <tbody id="examTableBody">
-            </tbody>
-        </table>
-        
-    <div class="flex justify-end max-w-4xl mx-auto mb-4 mr-50 mt-10">
-        <button onclick="toggleAdmin()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-1 rounded-full text-sm transition">
+    <!-- 表格區塊 -->
+    <table class="mx-auto border-collapse border border-gray-700 w-full max-w-4xl mb-6">
+        <thead>
+            <tr class="bg-gray-800">
+                <th class="border border-gray-700 px-4 py-2">學年度</th>
+                <th class="border border-gray-700 px-4 py-2">科目名稱</th>
+                <th class="border border-gray-700 px-4 py-2">授課教授</th>
+                <th class="border border-gray-700 px-4 py-2">考試類別</th>
+                <th class="border border-gray-700 px-4 py-2">考試範圍</th> 
+                <th class="border border-gray-700 px-4 py-2">題目檔案</th>
+                <th class="border border-gray-700 px-4 py-2">解答檔案</th>  
+            </tr>
+        </thead>
+        <tbody id="examTableBody">
+        </tbody>
+    </table>
+    
+    <!-- 切換新增面板按鈕 -->
+    <div class="flex justify-end max-w-4xl mx-auto mb-4">
+        <button onclick="toggleAdmin()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-1.5 rounded-full text-sm transition">
             <span id="toggleText">➕ 新增考古題</span>
         </button>
     </div>
 
+    <!-- 新增資料面板 (包含完整按鈕) -->
     <div id="adminPanel" class="hidden max-w-4xl mx-auto bg-gray-800 p-6 rounded-lg shadow-xl mb-10 border border-gray-700 transition-all">
         <h2 class="text-xl font-semibold mb-4 text-blue-300">新增考古題資料</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"> 
             <div>
-            <label class="block text-gray-400 text-sm mb-1">選擇年級</label>
-            <select id="add-grade" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="Freshman1">大一上</option>
-                <option value="Freshman2">大一下</option>
-                <option value="Sophomore1">大二上</option>
-                <option value="Sophomore2">大二下</option>
-                <option value="Junior1">大三上</option>
-                <option value="Junior2">大三下</option>
-                <option value="Senior1">大四上</option>
-                <option value="Senior2">大四下</option>
-                <option value="General">通識</option>
-            </select>
+                <label class="block text-gray-400 text-sm mb-1">選擇年級</label>
+                <select id="add-grade" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="Freshman1">大一上</option>
+                    <option value="Freshman2">大一下</option>
+                    <option value="Sophomore1">大二上</option>
+                    <option value="Sophomore2">大二下</option>
+                    <option value="Junior1">大三上</option>
+                    <option value="Junior2">大三下</option>
+                    <option value="Senior1">大四上</option>
+                    <option value="Senior2">大四下</option>
+                    <option value="General">通識</option>
+                </select>
             </div>
             <div>
-            <label class="block text-gray-400 text-sm mb-1">輸入科目名稱</label>
-            <input type="text" id="add-subject" placeholder="例如：微積分一" 
-               class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-gray-400 text-sm mb-1">輸入科目名稱</label>
+                <input type="text" id="add-subject" placeholder="例如：微積分一" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
-            <label class="block text-gray-400 text-sm mb-1">輸入老師名字</label>
-            <input type="text" id="add-teacher" placeholder="請注意錯別字" 
-               class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-gray-400 text-sm mb-1">輸入老師名字</label>
+                <input type="text" id="add-teacher" placeholder="請注意錯別字" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-
             <div>
-            <label class="block text-gray-400 text-sm mb-1">輸入學年度</label>
-            <input type="text" id="semester" placeholder="例如：114-1" 
-               class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-gray-400 text-sm mb-1">輸入學年度</label>
+                <input type="text" id="semester" placeholder="例如：114-1" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-
             <div>
-            <label class="block text-gray-400 text-sm mb-1">輸入考試類別</label>
-            <input type="text" id="testType" placeholder="例如：期中考、小考1" 
-                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-gray-400 text-sm mb-1">輸入考試類別</label>
+                <input type="text" id="testType" placeholder="例如：期中考、小考1" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-
             <div>
-           <label class="block text-gray-400 text-sm mb-1">輸入考試範圍(選填)</label>
-            <input type="text" id="testScope" placeholder="例：ch3-2 to ch4-1" 
-                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-gray-400 text-sm mb-1">輸入考試範圍(選填)</label>
+                <input type="text" id="testScope" placeholder="例：ch3-2 to ch4-1" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-
             <div>
-            <label class="block text-gray-400 text-sm mb-1">上傳題目PDF</label>
-            <input type="file" id="newfile" accept=".pdf" 
-                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-500">
+                <label class="block text-gray-400 text-sm mb-1">上傳題目PDF</label>
+                <input type="file" id="newfile" accept=".pdf" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-500">
             </div>
-
             <div>
-            <label class="block text-gray-400 text-sm mb-1">上傳答案PDF(選填)</label>
-            <input type="file" id="ansfile" accept=".pdf" 
-                class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-500">
+                <label class="block text-gray-400 text-sm mb-1">上傳答案PDF(選填)</label>
+                <input type="file" id="ansfile" accept=".pdf" class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-gray-200 outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-blue-600 file:text-white hover:file:bg-blue-500">
             </div>
         </div>
+
+        <button onclick="handleManualAdd()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded transition">
+            確認新增
+        </button>
     </div>
 
-    <!-- 確認按鈕 -->
-    <button onclick="handleManualAdd()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 rounded transition">
-        確認新增
-    </button>
-</div>
-
-
-    </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-        <script src="script.js"></script> 
-    </body>
+</body>
 </html>
