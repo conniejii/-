@@ -353,3 +353,22 @@ document.addEventListener('DOMContentLoaded', () => {
         addSubmitBtn.addEventListener('click', handleManualAdd);
     }
 });
+
+
+// 寫入 Supabase 數據庫 (同時相容 sub/subject 與 prof/teacher 欄位名稱)
+        const { error: insertError } = await MYsupabase
+            .from('exams')
+            .insert([
+                {
+                    grade: grade,
+                    sub: sub,
+                    subject: sub,
+                    prof: prof,
+                    teacher: prof,
+                    year: year,
+                    type: type,
+                    scope: scope,
+                    file_url: fileUrl,
+                    ans_url: ansUrl
+                }
+            ]);
