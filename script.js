@@ -229,17 +229,22 @@ if (teacherSelect) {
 document.addEventListener('DOMContentLoaded', loadExamsFromSupabase);
 
 
-// 賦予按鈕「切換面板」的意義
+// 切換新增面板的顯示與隱藏
 function toggleAdmin() {
-    // 1. 找到你的管理面板和按鈕文字
+    // 1. 取得管理面板與按鈕文字元素
     const panel = document.getElementById('adminPanel');
     const btnText = document.getElementById('toggleText');
 
-    // 2. 切換面板的「隱藏/顯示」狀態
-    // toggle 的意思是：有 hidden 就刪掉它，沒 hidden 就加上它
+    // 防呆機制：確保畫面上有這兩個元素才執行
+    if (!panel || !btnText) {
+        console.error("找不到 adminPanel 或 toggleText 元素！");
+        return;
+    }
+
+    // 2. 切換 Tailwind 的 hidden 類別
     panel.classList.toggle('hidden');
 
-    // 3. 根據面板現在的狀態，改變按鈕上的文字
+    // 3. 根據面板狀態更新按鈕文字
     if (panel.classList.contains('hidden')) {
         btnText.innerText = '➕ 新增考古題';
     } else {
