@@ -242,3 +242,13 @@ function toggleAdmin() {
         btnText.innerText = '❌ 關閉面板';
     }
 }
+
+// 當網頁載入完成後，幫按鈕綁定點擊事件
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('toggleBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleAdmin);
+    }
+});
+
+}
