@@ -87,11 +87,10 @@ function initDropdownOptions() {
     });
 }
 
-// 3. 當「年級」改變時更新科目選單（統一用 clean 去空白）
+// 3. 當「年級」改變時更新科目選單
 function updateGradeUI() {
     const selectedGrade = clean(gradeSelect.value);
 
-    // 如果切回「所有年級」，恢復預設全區域選單
     if (!selectedGrade) {
         initDropdownOptions();
         return;
@@ -106,7 +105,6 @@ function updateGradeUI() {
         const examGrade = clean(exam.grade);
         const examSub = clean(exam.sub || exam.subject);
 
-        // 比對時去空白，存入 Set 時也去空白
         if (examGrade === selectedGrade && examSub) {
             subjectsInGrade.add(examSub);
         }
@@ -206,28 +204,7 @@ function renderTable() {
     });
 }
 
-// 6. 事件監聽
-if (gradeSelect) {
-    gradeSelect.addEventListener('change', function() {
-        updateGradeUI();
-        renderTable();
-    });
-}
-
-if (subjectSelect) {
-    subjectSelect.addEventListener('change', function() {
-        updateSubjectUI();
-        renderTable();
-    });
-}
-
-if (teacherSelect) {
-    teacherSelect.addEventListener('change', renderTable);
-}
-
-// 7. 網頁開啟時執行
-document.addEventListener('DOMContentLoaded', loadExamsFromSupabase);
-
+// 6. 切換新增面板
 function toggleAdmin() {
     const panel = document.getElementById('adminPanel');
     const btnText = document.getElementById('toggleText');
@@ -243,18 +220,10 @@ function toggleAdmin() {
     }
 }
 
-// 當網頁載入完成後，幫按鈕綁定點擊事件
-document.addEventListener('DOMContentLoaded', () => {
-    const toggleBtn = document.getElementById('toggleBtn');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', toggleAdmin);
-    }
-});
+// 7. 新增考古題處理邏輯
+async function handleManualAdd() {
+    console.log("👉 點擊了確認新增按鈕！");
 
-
-// 1. 新增考古題函式
-function handleManualAdd() {
-    console.log("👉 點擊了確認新增按鈕！"); // 👈 加上這行測試
     const grade = document.getElementById('add-grade').value;
     const sub = document.getElementById('add-subject').value.trim();
     const prof = document.getElementById('add-teacher').value.trim();
@@ -267,44 +236,112 @@ function handleManualAdd() {
     const file = fileInput.files[0];
     const ansFile = ansFileInput.files[0];
 
-    // 檢查必填欄位
-    if (!sub || !prof || !year || !type || !fileInput.value) {
-        alert("請填寫完整資訊並選擇題目 PDF 檔案喔！");
+    // 基礎欄位檢查
+    if (!sub || !prof || !year || !type || !file) {
+        alert("請填寫完整資訊（科目、老師、學年度、考試類別）並選擇題目 PDF 檔案喔！");
         return;
     }
 
-    // 呼叫原本的 add 函式 (若有)
-    if (typeof add === "function") {
-        add(grade, sub, prof, year, type, file, ansFile);
-    } else {
-        console.log("新增資料中...", { grade, sub, prof, year, type, scope, file, ansFile });
-    }
+    try {
+        let fileUrl = '';
+        let ansUrl = '';
 
-    alert("成功加入考古題！");
+        // 上傳題目 PDF (假設 Storage Bucket 名稱為 pdfs)
+        if (file) {
+            const fileName = `exam_${Date.now()}_${file.name}`;
+            const { data, error } = await MYsupabase.storage
+                .from('pdfs')
+                .upload(fileName, file);
 
-    // 重新繪製表格
-    if (typeof renderTable === "function") {
-        renderTable();
-    }
+            if (error) console.warn("檔案上傳 Warning/Error:", error.message);
 
-    // 收起面板
-    if (typeof toggleAdmin === "function") {
+            const { data: publicData } = MYsupabase.storage
+                .from('pdfs')
+                .getPublicUrl(fileName);
+
+            fileUrl = publicData ? publicData.publicUrl : '';
+        }
+
+        // 上傳答案 PDF (如果有選擇)
+        if (ansFile) {
+            const fileName = `ans_${Date.now()}_${ansFile.name}`;
+            const { data, error } = await MYsupabase.storage
+                .from('pdfs')
+                .upload(fileName, ansFile);
+
+            if (error) console.warn("答案檔上傳 Warning/Error:", error.message);
+
+            const { data: publicData } = MYsupabase.storage
+                .from('pdfs')
+                .getPublicUrl(fileName);
+
+            ansUrl = publicData ? publicData.publicUrl : '';
+        }
+
+        // 寫入 Supabase 數據庫
+        const { error: insertError } = await MYsupabase
+            .from('exams')
+            .insert([
+                {
+                    grade: grade,
+                    subject: sub,
+                    teacher: prof,
+                    year: year,
+                    type: type,
+                    scope: scope,
+                    file_url: fileUrl,
+                    ans_url: ansUrl
+                }
+            ]);
+
+        if (insertError) throw insertError;
+
+        alert("🎉 成功加入考古題！");
+
+        // 清空輸入框內容
+        document.getElementById('add-subject').value = '';
+        document.getElementById('add-teacher').value = '';
+        document.getElementById('semester').value = '';
+        document.getElementById('testType').value = '';
+        document.getElementById('testScope').value = '';
+        fileInput.value = '';
+        ansFileInput.value = '';
+
+        // 收起面板並刷新列表
         toggleAdmin();
-    }
+        await loadExamsFromSupabase();
 
-    // 清空輸入框
-    document.getElementById('add-subject').value = '';
-    document.getElementById('add-teacher').value = '';
-    document.getElementById('semester').value = '';
-    document.getElementById('testType').value = '';
-    document.getElementById('testScope').value = '';
-    fileInput.value = '';
-    ansFileInput.value = '';
+    } catch (err) {
+        console.error("新增失敗：", err);
+        alert("新增失敗：" + err.message);
+    }
 }
 
-// 2. 網頁載入完成後，統一幫所有按鈕綁定監聽事件
+// 8. 網頁載入完成後統一下達事件綁定
 document.addEventListener('DOMContentLoaded', () => {
-    // 開關面板按鈕
+    // 載入資料庫內容
+    loadExamsFromSupabase();
+
+    // 篩選選單事件
+    if (gradeSelect) {
+        gradeSelect.addEventListener('change', () => {
+            updateGradeUI();
+            renderTable();
+        });
+    }
+
+    if (subjectSelect) {
+        subjectSelect.addEventListener('change', () => {
+            updateSubjectUI();
+            renderTable();
+        });
+    }
+
+    if (teacherSelect) {
+        teacherSelect.addEventListener('change', renderTable);
+    }
+
+    // 面板開關按鈕
     const toggleBtn = document.getElementById('toggleBtn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', toggleAdmin);
