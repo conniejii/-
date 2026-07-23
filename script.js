@@ -249,6 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toggleBtn) {
         toggleBtn.addEventListener('click', toggleAdmin);
     }
-});
+}
 
 }
