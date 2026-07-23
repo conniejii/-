@@ -204,7 +204,7 @@ function renderTable() {
     });
 }
 
-// 6. 切換新增面板
+// 6. 切換新增面板展開 / 隱藏
 function toggleAdmin() {
     const panel = document.getElementById('adminPanel');
     const btnText = document.getElementById('toggleText');
@@ -229,6 +229,8 @@ async function handleManualAdd() {
     const prof = document.getElementById('add-teacher').value.trim();
     const year = document.getElementById('semester').value.trim();
     const type = document.getElementById('testType').value.trim();
+    
+    // 選填欄位：如果沒填預設為空字串
     const scope = document.getElementById('testScope').value.trim();
 
     const fileInput = document.getElementById('newfile');
@@ -236,9 +238,9 @@ async function handleManualAdd() {
     const file = fileInput.files[0];
     const ansFile = ansFileInput.files[0];
 
-    // 基礎欄位檢查
+    // 必填欄位驗證（科目、老師、學年度、考試類別、題目PDF）
     if (!sub || !prof || !year || !type || !file) {
-        alert("請填寫完整資訊（科目、老師、學年度、考試類別）並選擇題目 PDF 檔案喔！");
+        alert("請填寫必填資訊（科目、老師、學年度、考試類別）並選擇題目 PDF 檔案喔！");
         return;
     }
 
@@ -246,49 +248,49 @@ async function handleManualAdd() {
         let fileUrl = '';
         let ansUrl = '';
 
-        // 上傳題目 PDF (假設 Storage Bucket 名稱為 pdfs)
+        // 1. 上傳題目 PDF (必填) -> Bucket: exam_files
         if (file) {
             const fileName = `exam_${Date.now()}_${file.name}`;
             const { data, error } = await MYsupabase.storage
-                .from('pdfs')
+                .from('exam_files')
                 .upload(fileName, file);
 
-            if (error) console.warn("檔案上傳 Warning/Error:", error.message);
+            if (error) console.warn("題目檔上傳警示:", error.message);
 
             const { data: publicData } = MYsupabase.storage
-                .from('pdfs')
+                .from('exam_files')
                 .getPublicUrl(fileName);
 
             fileUrl = publicData ? publicData.publicUrl : '';
         }
 
-        // 上傳答案 PDF (如果有選擇)
+        // 2. 上傳解答 PDF (選填：有選擇檔案才執行) -> Bucket: exam_files
         if (ansFile) {
             const fileName = `ans_${Date.now()}_${ansFile.name}`;
             const { data, error } = await MYsupabase.storage
-                .from('pdfs')
+                .from('exam_files')
                 .upload(fileName, ansFile);
 
-            if (error) console.warn("答案檔上傳 Warning/Error:", error.message);
+            if (error) console.warn("答案檔上傳警示:", error.message);
 
             const { data: publicData } = MYsupabase.storage
-                .from('pdfs')
+                .from('exam_files')
                 .getPublicUrl(fileName);
 
             ansUrl = publicData ? publicData.publicUrl : '';
         }
 
-        // 寫入 Supabase 數據庫
+        // 3. 寫入 Supabase 數據庫
         const { error: insertError } = await MYsupabase
             .from('exams')
             .insert([
                 {
                     grade: grade,
-                    subject: sub,
-                    teacher: prof,
+                    sub: sub,
+                    prof: prof,
                     year: year,
                     type: type,
-                    scope: scope,
+                    scope: scope || '',
                     file_url: fileUrl,
                     ans_url: ansUrl
                 }
@@ -298,7 +300,7 @@ async function handleManualAdd() {
 
         alert("🎉 成功加入考古題！");
 
-        // 清空輸入框內容
+        // 4. 清空輸入框內容
         document.getElementById('add-subject').value = '';
         document.getElementById('add-teacher').value = '';
         document.getElementById('semester').value = '';
@@ -307,7 +309,7 @@ async function handleManualAdd() {
         fileInput.value = '';
         ansFileInput.value = '';
 
-        // 收起面板並刷新列表
+        // 5. 自動關閉面板並刷新資料列表
         toggleAdmin();
         await loadExamsFromSupabase();
 
@@ -317,12 +319,12 @@ async function handleManualAdd() {
     }
 }
 
-// 8. 網頁載入完成後統一下達事件綁定
+// 8. 頁面載入完成後統一下達事件綁定
 document.addEventListener('DOMContentLoaded', () => {
-    // 載入資料庫內容
+    // 載入資料庫初始資料
     loadExamsFromSupabase();
 
-    // 篩選選單事件
+    // 篩選下拉選單事件
     if (gradeSelect) {
         gradeSelect.addEventListener('change', () => {
             updateGradeUI();
@@ -341,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         teacherSelect.addEventListener('change', renderTable);
     }
 
-    // 面板開關按鈕
+    // 展開/關閉新增面板按鈕
     const toggleBtn = document.getElementById('toggleBtn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', toggleAdmin);
@@ -353,22 +355,3 @@ document.addEventListener('DOMContentLoaded', () => {
         addSubmitBtn.addEventListener('click', handleManualAdd);
     }
 });
-
-
-// 寫入 Supabase 數據庫 (同時相容 sub/subject 與 prof/teacher 欄位名稱)
-        const { error: insertError } = await MYsupabase
-            .from('exams')
-            .insert([
-                {
-                    grade: grade,
-                    sub: sub,
-                    subject: sub,
-                    prof: prof,
-                    teacher: prof,
-                    year: year,
-                    type: type,
-                    scope: scope,
-                    file_url: fileUrl,
-                    ans_url: ansUrl
-                }
-            ]);
