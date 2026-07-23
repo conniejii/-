@@ -227,3 +227,22 @@ if (teacherSelect) {
 
 // 7. 網頁開啟時執行
 document.addEventListener('DOMContentLoaded', loadExamsFromSupabase);
+
+
+// 賦予按鈕「切換面板」的意義
+function toggleAdmin() {
+    // 1. 找到你的管理面板和按鈕文字
+    const panel = document.getElementById('adminPanel');
+    const btnText = document.getElementById('toggleText');
+
+    // 2. 切換面板的「隱藏/顯示」狀態
+    // toggle 的意思是：有 hidden 就刪掉它，沒 hidden 就加上它
+    panel.classList.toggle('hidden');
+
+    // 3. 根據面板現在的狀態，改變按鈕上的文字
+    if (panel.classList.contains('hidden')) {
+        btnText.innerText = '➕ 新增考古題';
+    } else {
+        btnText.innerText = '❌ 關閉面板';
+    }
+}
