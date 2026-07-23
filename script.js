@@ -254,6 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 1. 新增考古題函式
 function handleManualAdd() {
+    console.log("👉 點擊了確認新增按鈕！"); // 👈 加上這行測試
     const grade = document.getElementById('add-grade').value;
     const sub = document.getElementById('add-subject').value.trim();
     const prof = document.getElementById('add-teacher').value.trim();
