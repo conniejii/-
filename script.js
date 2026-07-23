@@ -252,13 +252,13 @@ async function handleManualAdd() {
         if (file) {
             const fileName = `exam_${Date.now()}_${file.name}`;
             const { data, error } = await MYsupabase.storage
-                .from('pdfs')
+                .from('exam_files')
                 .upload(fileName, file);
 
             if (error) console.warn("題目檔上傳警示:", error.message);
 
             const { data: publicData } = MYsupabase.storage
-                .from('pdfs')
+                .from('exam_files')
                 .getPublicUrl(fileName);
 
             fileUrl = publicData ? publicData.publicUrl : '';
@@ -268,13 +268,13 @@ async function handleManualAdd() {
         if (ansFile) {
             const fileName = `ans_${Date.now()}_${ansFile.name}`;
             const { data, error } = await MYsupabase.storage
-                .from('pdfs')
+                .from('exam_files')
                 .upload(fileName, ansFile);
 
             if (error) console.warn("答案檔上傳警示:", error.message);
 
             const { data: publicData } = MYsupabase.storage
-                .from('pdfs')
+                .from('exam_files')
                 .getPublicUrl(fileName);
 
             ansUrl = publicData ? publicData.publicUrl : '';
