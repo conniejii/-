@@ -250,12 +250,18 @@ async function handleManualAdd() {
 
         // 1. 上傳題目 PDF (必填)
         if (file) {
-            const fileName = `exam_${Date.now()}_${file.name}`;
+            // 擷取副檔名並只使用時間戳記作為 Storage 檔名，避免中文或特殊符號觸發 InvalidKey
+            const fileExt = file.name.split('.').pop();
+            const fileName = `exam_${Date.now()}.${fileExt}`;
+
             const { data, error } = await MYsupabase.storage
                 .from('exam_files')
                 .upload(fileName, file);
 
-            if (error) console.warn("題目檔上傳警示:", error.message);
+            if (error) {
+                console.error("題目上傳失敗:", error);
+                throw new Error("題目檔上傳失敗：" + error.message);
+            }
 
             const { data: publicData } = MYsupabase.storage
                 .from('exam_files')
@@ -266,12 +272,17 @@ async function handleManualAdd() {
 
         // 2. 上傳解答 PDF (選填：有選擇檔案才執行)
         if (ansFile) {
-            const fileName = `ans_${Date.now()}_${ansFile.name}`;
+            const ansExt = ansFile.name.split('.').pop();
+            const fileName = `ans_${Date.now()}.${ansExt}`;
+
             const { data, error } = await MYsupabase.storage
                 .from('exam_files')
                 .upload(fileName, ansFile);
 
-            if (error) console.warn("答案檔上傳警示:", error.message);
+            if (error) {
+                console.error("答案上傳失敗:", error);
+                throw new Error("答案檔上傳失敗：" + error.message);
+            }
 
             const { data: publicData } = MYsupabase.storage
                 .from('exam_files')
@@ -280,7 +291,7 @@ async function handleManualAdd() {
             ansUrl = publicData ? publicData.publicUrl : '';
         }
 
-        // 3. 寫入 Supabase 數據庫 (冒號左邊為 Supabase 資料庫欄位名)
+        // 3. 寫入 Supabase 數據庫
         const { error: insertError } = await MYsupabase
             .from('exams')
             .insert([
