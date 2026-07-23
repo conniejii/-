@@ -252,59 +252,46 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// 新增考古題資料處理函式
-async function handleManualAdd() {
-    // 1. 抓取所有欄位的值 (ID 與 HTML 保持一致)
+// 1. 新增考古題函式
+function handleManualAdd() {
     const grade = document.getElementById('add-grade').value;
     const sub = document.getElementById('add-subject').value.trim();
     const prof = document.getElementById('add-teacher').value.trim();
     const year = document.getElementById('semester').value.trim();
     const type = document.getElementById('testType').value.trim();
-    const scope = document.getElementById('testScope').value.trim(); // 考試範圍 (選填)
+    const scope = document.getElementById('testScope').value.trim();
 
-    // 檔案物件 (若後續需上傳至 Supabase Storage 使用)
     const fileInput = document.getElementById('newfile');
     const ansFileInput = document.getElementById('ansfile');
     const file = fileInput.files[0];
     const ansFile = ansFileInput.files[0];
 
-    // 2. 基礎必填欄位檢查 (科目、老師、學年度、考試類別、題目檔案)
+    // 檢查必填欄位
     if (!sub || !prof || !year || !type || !fileInput.value) {
         alert("請填寫完整資訊並選擇題目 PDF 檔案喔！");
-        return; // 中止執行
+        return;
     }
 
-    // 3. 呼叫新增資料的函式 (以物件或多參數形式傳遞)
-    // 如果你有對接資料庫 (如 Supabase)，可以在 add 函式內處理上傳
+    // 呼叫原本的 add 函式 (若有)
     if (typeof add === "function") {
-        await add({
-            grade,
-            sub,
-            prof,
-            year,
-            type,
-            scope,
-            file,
-            ansFile
-        });
+        add(grade, sub, prof, year, type, file, ansFile);
     } else {
         console.log("新增資料中...", { grade, sub, prof, year, type, scope, file, ansFile });
     }
 
-    // 4. 提示與介面更新
     alert("成功加入考古題！");
 
-    // 重新繪製畫面表格 (如果有 renderTable 函式)
+    // 重新繪製表格
     if (typeof renderTable === "function") {
         renderTable();
     }
 
-    // 自動收起管理面板
+    // 收起面板
     if (typeof toggleAdmin === "function") {
         toggleAdmin();
     }
 
-    // 5. 清空輸入框內容，方便下一次輸入
+    // 清空輸入框
     document.getElementById('add-subject').value = '';
     document.getElementById('add-teacher').value = '';
     document.getElementById('semester').value = '';
@@ -313,3 +300,18 @@ async function handleManualAdd() {
     fileInput.value = '';
     ansFileInput.value = '';
 }
+
+// 2. 網頁載入完成後，統一幫所有按鈕綁定監聽事件
+document.addEventListener('DOMContentLoaded', () => {
+    // 開關面板按鈕
+    const toggleBtn = document.getElementById('toggleBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleAdmin);
+    }
+
+    // 確認新增按鈕
+    const addSubmitBtn = document.getElementById('addSubmitBtn');
+    if (addSubmitBtn) {
+        addSubmitBtn.addEventListener('click', handleManualAdd);
+    }
+});
