@@ -228,23 +228,14 @@ if (teacherSelect) {
 // 7. 網頁開啟時執行
 document.addEventListener('DOMContentLoaded', loadExamsFromSupabase);
 
-
-// 切換新增面板的顯示與隱藏
 function toggleAdmin() {
-    // 1. 取得管理面板與按鈕文字元素
     const panel = document.getElementById('adminPanel');
     const btnText = document.getElementById('toggleText');
 
-    // 防呆機制：確保畫面上有這兩個元素才執行
-    if (!panel || !btnText) {
-        console.error("找不到 adminPanel 或 toggleText 元素！");
-        return;
-    }
+    if (!panel || !btnText) return;
 
-    // 2. 切換 Tailwind 的 hidden 類別
     panel.classList.toggle('hidden');
 
-    // 3. 根據面板狀態更新按鈕文字
     if (panel.classList.contains('hidden')) {
         btnText.innerText = '➕ 新增考古題';
     } else {
