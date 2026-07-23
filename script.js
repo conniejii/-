@@ -248,39 +248,39 @@ async function handleManualAdd() {
         let fileUrl = '';
         let ansUrl = '';
 
-        // 1. 上傳題目 PDF (必填) -> Bucket: exam_files
+        // 1. 上傳題目 PDF (必填)
         if (file) {
             const fileName = `exam_${Date.now()}_${file.name}`;
             const { data, error } = await MYsupabase.storage
-                .from('exam_files')
+                .from('pdfs')
                 .upload(fileName, file);
 
             if (error) console.warn("題目檔上傳警示:", error.message);
 
             const { data: publicData } = MYsupabase.storage
-                .from('exam_files')
+                .from('pdfs')
                 .getPublicUrl(fileName);
 
             fileUrl = publicData ? publicData.publicUrl : '';
         }
 
-        // 2. 上傳解答 PDF (選填：有選擇檔案才執行) -> Bucket: exam_files
+        // 2. 上傳解答 PDF (選填：有選擇檔案才執行)
         if (ansFile) {
             const fileName = `ans_${Date.now()}_${ansFile.name}`;
             const { data, error } = await MYsupabase.storage
-                .from('exam_files')
+                .from('pdfs')
                 .upload(fileName, ansFile);
 
             if (error) console.warn("答案檔上傳警示:", error.message);
 
             const { data: publicData } = MYsupabase.storage
-                .from('exam_files')
+                .from('pdfs')
                 .getPublicUrl(fileName);
 
             ansUrl = publicData ? publicData.publicUrl : '';
         }
 
-        // 3. 寫入 Supabase 數據庫
+        // 3. 寫入 Supabase 數據庫 (冒號左邊為 Supabase 資料庫欄位名)
         const { error: insertError } = await MYsupabase
             .from('exams')
             .insert([
