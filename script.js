@@ -12,6 +12,8 @@ try {
 
 // 全域變數
 let allExams = [];   
+let currentPage = 1;        // 當前頁碼
+const PAGE_SIZE = 10;       // 每頁最多顯示 10 筆
 
 // DOM 元素
 const gradeSelect = document.getElementById('grade');
@@ -47,6 +49,7 @@ async function loadExamsFromSupabase() {
 
         // 初始化選單與表格
         initDropdownOptions();
+        currentPage = 1; // 重新載入時歸零頁碼
         renderTable();
 
     } catch (err) {
@@ -142,7 +145,7 @@ function updateSubjectUI() {
     });
 }
 
-// 5. 渲染表格
+// 5. 渲染表格（限制最多 10 列並包含分頁）
 function renderTable() {
     if (!tableBody) return;
 
@@ -172,10 +175,20 @@ function renderTable() {
                 </td>
             </tr>
         `;
+        renderPagination(0, 0);
         return;
     }
 
-    filtered.forEach(exam => {
+    // 計算總頁數與當前頁面截取範圍
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const pageData = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+
+    // 只渲染當前頁面的資料（最多 10 筆）
+    pageData.forEach(exam => {
         const row = document.createElement('tr');
         row.className = "hover:bg-gray-800/50 transition-colors";
 
@@ -202,6 +215,63 @@ function renderTable() {
         `;
         tableBody.appendChild(row);
     });
+
+    // 渲染分頁按鈕與頁碼資訊
+    renderPagination(filtered.length, totalPages);
+}
+
+// 5.1 渲染分頁按鈕 UI
+function renderPagination(totalCount, totalPages) {
+    const paginationContainer = document.getElementById('pagination');
+    if (!paginationContainer) return;
+
+    if (totalCount === 0) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    paginationContainer.innerHTML = `
+        <div class="flex items-center justify-between text-sm text-gray-400 my-4 px-2">
+            <div>
+                顯示第 <span class="text-white font-medium">${(currentPage - 1) * PAGE_SIZE + 1}</span> 到 
+                <span class="text-white font-medium">${Math.min(currentPage * PAGE_SIZE, totalCount)}</span> 筆，
+                共 <span class="text-white font-medium">${totalCount}</span> 筆
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="prevPageBtn" ${currentPage === 1 ? 'disabled' : ''} 
+                    class="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    上一頁
+                </button>
+                <span class="px-2 text-gray-300">${currentPage} / ${totalPages} 頁</span>
+                <button id="nextPageBtn" ${currentPage >= totalPages ? 'disabled' : ''} 
+                    class="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                    下一頁
+                </button>
+            </div>
+        </div>
+    `;
+
+    // 綁定上一頁與下一頁點擊動作
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        });
+    }
 }
 
 // 6. 切換新增面板展開 / 隱藏
@@ -335,10 +405,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 載入資料庫初始資料
     loadExamsFromSupabase();
 
-    // 篩選下拉選單事件
+    // 篩選下拉選單事件（切換選單時自動回到第 1 頁）
     if (gradeSelect) {
         gradeSelect.addEventListener('change', () => {
             updateGradeUI();
+            currentPage = 1;
             renderTable();
         });
     }
@@ -346,12 +417,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (subjectSelect) {
         subjectSelect.addEventListener('change', () => {
             updateSubjectUI();
+            currentPage = 1;
             renderTable();
         });
     }
 
     if (teacherSelect) {
-        teacherSelect.addEventListener('change', renderTable);
+        teacherSelect.addEventListener('change', () => {
+            currentPage = 1;
+            renderTable();
+        });
     }
 
     // 展開/關閉新增面板按鈕
